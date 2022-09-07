@@ -398,6 +398,8 @@ class IncomingPaymentHandler(val nodeParams: NodeParams, val walletParams: Walle
     }
 
     companion object {
+        private val logger by lightningLogger()
+
         /** Convert an incoming htlc to a payment part abstraction. Payment parts are then summed together to reach the full payment amount. */
         private fun toPaymentPart(privateKey: PrivateKey, htlc: UpdateAddHtlc): Either<ProcessAddResult.Rejected, HtlcPart> {
             // NB: IncomingPacket.decrypt does additional validation on top of IncomingPacket.decryptOnion
@@ -405,6 +407,7 @@ class IncomingPaymentHandler(val nodeParams: NodeParams, val walletParams: Walle
                 is Either.Left -> { // Unable to decrypt onion
                     val failureMsg = decrypted.value
                     val action = actionForFailureMessage(failureMsg, htlc)
+                    logger.warning { "decryption failed for htlc=$htlc privateKey=$privateKey failure=$failureMsg" }
                     Either.Left(ProcessAddResult.Rejected(listOf(action), null))
                 }
                 is Either.Right -> Either.Right(HtlcPart(htlc, decrypted.value))
