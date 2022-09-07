@@ -467,6 +467,7 @@ class Peer(
     }
 
     private suspend fun processIncomingPayment(item: Either<PayToOpenRequest, UpdateAddHtlc>) {
+        println("processing incoming payment $item")
         val currentBlockHeight = currentTipFlow.filterNotNull().first().first
         val result = when (item) {
             is Either.Right -> incomingPaymentHandler.process(item.value, currentBlockHeight)
@@ -535,6 +536,7 @@ class Peer(
         when {
             event is BytesReceived -> {
                 val msg = LightningMessage.decode(event.data)
+                println("n:$remoteNodeId received $msg")
                 msg?.let { if (it !is Ping && it !is Pong) logger.info { "n:$remoteNodeId received $it" } }
                 when {
                     msg is Init -> {

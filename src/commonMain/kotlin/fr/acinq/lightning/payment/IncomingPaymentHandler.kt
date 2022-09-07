@@ -152,6 +152,7 @@ class IncomingPaymentHandler(val nodeParams: NodeParams, val walletParams: Walle
         // as we don't know the `onion.totalAmount` yet.
         // So to prevent any kind of information leakage, we always peel the onion first.
         logger.info { "h:${htlc.paymentHash} received htlc amount=${htlc.amountMsat} expiry=${htlc.cltvExpiry}" }
+        println("h:${htlc.paymentHash} received htlc amount=${htlc.amountMsat} expiry=${htlc.cltvExpiry}")
         return when (val res = toPaymentPart(privateKey, htlc)) {
             is Either.Left -> res.value
             is Either.Right -> processPaymentPart(res.value, currentBlockHeight)
@@ -404,12 +405,14 @@ class IncomingPaymentHandler(val nodeParams: NodeParams, val walletParams: Walle
 
         /** Convert an incoming htlc to a payment part abstraction. Payment parts are then summed together to reach the full payment amount. */
         private fun toPaymentPart(privateKey: PrivateKey, htlc: UpdateAddHtlc): Either<ProcessAddResult.Rejected, HtlcPart> {
+            println("trying to decrypt htlc=$htlc with privateKey=$privateKey")
             // NB: IncomingPacket.decrypt does additional validation on top of IncomingPacket.decryptOnion
             return when (val decrypted = IncomingPaymentPacket.decrypt(htlc, privateKey)) {
                 is Either.Left -> { // Unable to decrypt onion
                     val failureMsg = decrypted.value
                     val action = actionForFailureMessage(failureMsg, htlc)
                     logger.warning { "decryption failed for htlc=$htlc privateKey=$privateKey failure=$failureMsg" }
+                    println("decryption failed for htlc=$htlc privateKey=$privateKey failure=$failureMsg")
                     Either.Left(ProcessAddResult.Rejected(listOf(action), null))
                 }
                 is Either.Right -> Either.Right(HtlcPart(htlc, decrypted.value))
