@@ -17,6 +17,7 @@ import fr.acinq.lightning.io.PeerEvent
 import fr.acinq.lightning.io.WrappedChannelEvent
 import fr.acinq.lightning.utils.*
 import fr.acinq.lightning.wire.*
+import kotlin.native.concurrent.ThreadLocal
 
 sealed class PaymentPart {
     abstract val amount: MilliSatoshi
@@ -396,7 +397,8 @@ class IncomingPaymentHandler(val nodeParams: NodeParams, val walletParams: Walle
             db.removeIncomingPayment(it.paymentHash)
         }
     }
-
+    
+    @ThreadLocal
     companion object {
         private val logger by lightningLogger()
 
