@@ -12,7 +12,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
 
-object ByteVectorKSerializer : KSerializer<ByteVector> {
+internal object ByteVectorKSerializer : KSerializer<ByteVector> {
     @Serializable
     private data class ByteVectorSurrogate(val value: ByteArray)
 
@@ -29,7 +29,7 @@ object ByteVectorKSerializer : KSerializer<ByteVector> {
     }
 }
 
-object ByteVector32KSerializer : KSerializer<ByteVector32> {
+internal object ByteVector32KSerializer : KSerializer<ByteVector32> {
     @Serializable
     private data class ByteVector32Surrogate(val value: ByteArray) {
         init {
@@ -50,7 +50,7 @@ object ByteVector32KSerializer : KSerializer<ByteVector32> {
     }
 }
 
-object ByteVector64KSerializer : KSerializer<ByteVector64> {
+internal object ByteVector64KSerializer : KSerializer<ByteVector64> {
     @Serializable
     private data class ByteVector64Surrogate(val value: ByteArray)
 
@@ -67,7 +67,7 @@ object ByteVector64KSerializer : KSerializer<ByteVector64> {
     }
 }
 
-object PrivateKeyKSerializer : KSerializer<PrivateKey> {
+internal object PrivateKeyKSerializer : KSerializer<PrivateKey> {
 
     override fun deserialize(decoder: Decoder): PrivateKey {
         return PrivateKey(ByteVector32KSerializer.deserialize(decoder))
@@ -80,7 +80,7 @@ object PrivateKeyKSerializer : KSerializer<PrivateKey> {
     }
 }
 
-object PublicKeyKSerializer : KSerializer<PublicKey> {
+internal object PublicKeyKSerializer : KSerializer<PublicKey> {
 
     override fun deserialize(decoder: Decoder): PublicKey {
         return PublicKey(ByteVectorKSerializer.deserialize(decoder))
@@ -93,7 +93,7 @@ object PublicKeyKSerializer : KSerializer<PublicKey> {
     }
 }
 
-object SatoshiKSerializer : KSerializer<Satoshi> {
+internal object SatoshiKSerializer : KSerializer<Satoshi> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Satoshi", PrimitiveKind.LONG)
 
     override fun serialize(encoder: Encoder, value: Satoshi) {
@@ -105,7 +105,7 @@ object SatoshiKSerializer : KSerializer<Satoshi> {
     }
 }
 
-abstract class AbstractBtcSerializableKSerializer<T : BtcSerializable<T>>(val name: String, val btcSerializer: BtcSerializer<T>) : KSerializer<T> {
+internal abstract class AbstractBtcSerializableKSerializer<T : BtcSerializable<T>>(val name: String, val btcSerializer: BtcSerializer<T>) : KSerializer<T> {
     @Serializable
     data class Surrogate(val name: String, val bytes: ByteArray)
 
@@ -122,20 +122,20 @@ abstract class AbstractBtcSerializableKSerializer<T : BtcSerializable<T>>(val na
     }
 }
 
-object BlockHeaderKSerializer : AbstractBtcSerializableKSerializer<BlockHeader>("BlockHeader", BlockHeader)
+internal object BlockHeaderKSerializer : AbstractBtcSerializableKSerializer<BlockHeader>("BlockHeader", BlockHeader)
 
-object OutPointKSerializer : AbstractBtcSerializableKSerializer<OutPoint>("OutPoint", OutPoint)
+internal object OutPointKSerializer : AbstractBtcSerializableKSerializer<OutPoint>("OutPoint", OutPoint)
 
-object ScriptWitnessKSerializer : AbstractBtcSerializableKSerializer<ScriptWitness>("ScriptWitness", ScriptWitness)
+internal object ScriptWitnessKSerializer : AbstractBtcSerializableKSerializer<ScriptWitness>("ScriptWitness", ScriptWitness)
 
-object TxInKSerializer : AbstractBtcSerializableKSerializer<TxIn>("TxIn", TxIn)
+internal object TxInKSerializer : AbstractBtcSerializableKSerializer<TxIn>("TxIn", TxIn)
 
-object TxOutKSerializer : AbstractBtcSerializableKSerializer<TxOut>("TxOut", TxOut)
+internal object TxOutKSerializer : AbstractBtcSerializableKSerializer<TxOut>("TxOut", TxOut)
 
-object TransactionKSerializer : AbstractBtcSerializableKSerializer<Transaction>("Transaction", Transaction)
+internal object TransactionKSerializer : AbstractBtcSerializableKSerializer<Transaction>("Transaction", Transaction)
 
 
-object ExtendedPrivateKeyKSerializer : KSerializer<DeterministicWallet.ExtendedPrivateKey> {
+internal object ExtendedPrivateKeyKSerializer : KSerializer<DeterministicWallet.ExtendedPrivateKey> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ExtendedPublicKey") {
         element("secretkeybytes", ByteVector32KSerializer.descriptor)
         element("chaincode", ByteVector32KSerializer.descriptor)
@@ -179,7 +179,7 @@ object ExtendedPrivateKeyKSerializer : KSerializer<DeterministicWallet.ExtendedP
 
 }
 
-object ExtendedPublicKeyKSerializer : KSerializer<DeterministicWallet.ExtendedPublicKey> {
+internal object ExtendedPublicKeyKSerializer : KSerializer<DeterministicWallet.ExtendedPublicKey> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ExtendedPublicKey") {
         element("publickeybytes", ByteVectorKSerializer.descriptor)
         element("chaincode", ByteVector32KSerializer.descriptor)
@@ -223,7 +223,7 @@ object ExtendedPublicKeyKSerializer : KSerializer<DeterministicWallet.ExtendedPu
 
 }
 
-object KeyPathKSerializer : KSerializer<KeyPath> {
+internal object KeyPathKSerializer : KSerializer<KeyPath> {
     private val listSerializer = ListSerializer(Long.serializer())
 
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("KeyPath") {
