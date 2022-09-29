@@ -261,11 +261,11 @@ object Node {
                         call.respond(pr)
                     }
                     get("/channels") {
-                        call.respond(peer.channels.values.toList().map { fr.acinq.lightning.serialization.v1.ChannelState.import(it) })
+                        call.respond(peer.channels.values.toList().map { fr.acinq.lightning.serialization.v3.ChannelState.import(it) })
                     }
                     get("/channels/{channelId}") {
                         val channelId = ByteVector32(call.parameters["channelId"] ?: error("channelId not provided"))
-                        call.respond(peer.channels[channelId]?.let { fr.acinq.lightning.serialization.v1.ChannelState.import(it) } ?: "")
+                        call.respond(peer.channels[channelId]?.let { fr.acinq.lightning.serialization.v3.ChannelState.import(it) } ?: "")
                     }
                     post("/channels/{channelId}/close") {
                         val channelId = ByteVector32(call.parameters["channelId"] ?: error("channelId not provided"))

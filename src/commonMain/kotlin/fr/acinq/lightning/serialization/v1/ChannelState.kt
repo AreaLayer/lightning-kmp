@@ -51,23 +51,16 @@ internal data class CommitmentSpec(
     val toLocal: MilliSatoshi,
     val toRemote: MilliSatoshi
 ) {
-    constructor(from: fr.acinq.lightning.transactions.CommitmentSpec) : this(from.htlcs.map { DirectedHtlc.from(it) }.toSet(), from.feerate, from.toLocal, from.toRemote)
-
     fun export() = fr.acinq.lightning.transactions.CommitmentSpec(htlcs.map { it.to() }.toSet(), feerate, toLocal, toRemote)
-
 }
 
 @Serializable
 internal data class LocalChanges(val proposed: List<UpdateMessage>, val signed: List<UpdateMessage>, val acked: List<UpdateMessage>) {
-    constructor(from: fr.acinq.lightning.channel.LocalChanges) : this(from.proposed, from.signed, from.acked)
-
     fun export() = fr.acinq.lightning.channel.LocalChanges(proposed, signed, acked)
 }
 
 @Serializable
 internal data class RemoteChanges(val proposed: List<UpdateMessage>, val acked: List<UpdateMessage>, val signed: List<UpdateMessage>) {
-    constructor(from: fr.acinq.lightning.channel.RemoteChanges) : this(from.proposed, from.signed, from.acked)
-
     fun export() = fr.acinq.lightning.channel.RemoteChanges(proposed, signed, acked)
 }
 
@@ -77,36 +70,26 @@ internal data class HtlcTxAndSigs(
     @Serializable(with = ByteVector64KSerializer::class) val localSig: ByteVector64,
     @Serializable(with = ByteVector64KSerializer::class) val remoteSig: ByteVector64
 ) {
-    constructor(from: fr.acinq.lightning.channel.HtlcTxAndSigs) : this(from.txinfo, from.localSig, from.remoteSig)
-
     fun export() = fr.acinq.lightning.channel.HtlcTxAndSigs(txinfo, localSig, remoteSig)
 }
 
 @Serializable
 internal data class PublishableTxs(val commitTx: Transactions.TransactionWithInputInfo.CommitTx, val htlcTxsAndSigs: List<HtlcTxAndSigs>) {
-    constructor(from: fr.acinq.lightning.channel.PublishableTxs) : this(from.commitTx, from.htlcTxsAndSigs.map { HtlcTxAndSigs(it) })
-
     fun export() = fr.acinq.lightning.channel.PublishableTxs(commitTx, htlcTxsAndSigs.map { it.export() })
 }
 
 @Serializable
 internal data class LocalCommit(val index: Long, val spec: CommitmentSpec, val publishableTxs: PublishableTxs) {
-    constructor(from: fr.acinq.lightning.channel.LocalCommit) : this(from.index, CommitmentSpec(from.spec), PublishableTxs(from.publishableTxs))
-
     fun export() = fr.acinq.lightning.channel.LocalCommit(index, spec.export(), publishableTxs.export())
 }
 
 @Serializable
 internal data class RemoteCommit(val index: Long, val spec: CommitmentSpec, @Serializable(with = ByteVector32KSerializer::class) val txid: ByteVector32, @Serializable(with = PublicKeyKSerializer::class) val remotePerCommitmentPoint: PublicKey) {
-    constructor(from: fr.acinq.lightning.channel.RemoteCommit) : this(from.index, CommitmentSpec(from.spec), from.txid, from.remotePerCommitmentPoint)
-
     fun export() = fr.acinq.lightning.channel.RemoteCommit(index, spec.export(), txid, remotePerCommitmentPoint)
 }
 
 @Serializable
 internal data class WaitingForRevocation(val nextRemoteCommit: RemoteCommit, val sent: CommitSig, val sentAfterLocalCommitIndex: Long, val reSignAsap: Boolean = false) {
-    constructor(from: fr.acinq.lightning.channel.WaitingForRevocation) : this(RemoteCommit(from.nextRemoteCommit), from.sent, from.sentAfterLocalCommitIndex, from.reSignAsap)
-
     fun export() = fr.acinq.lightning.channel.WaitingForRevocation(nextRemoteCommit.export(), sent, sentAfterLocalCommitIndex, reSignAsap)
 }
 
@@ -119,8 +102,6 @@ internal data class LocalCommitPublished(
     val claimAnchorTxs: List<Transactions.TransactionWithInputInfo.ClaimAnchorOutputTx> = emptyList(),
     val irrevocablySpent: Map<@Serializable(with = OutPointKSerializer::class) OutPoint, @Serializable(with = TransactionKSerializer::class) Transaction> = emptyMap()
 ) {
-    constructor(from: fr.acinq.lightning.channel.LocalCommitPublished) : this(from.commitTx, from.claimMainDelayedOutputTx, from.htlcTxs, from.claimHtlcDelayedTxs, from.claimAnchorTxs, from.irrevocablySpent)
-
     fun export() = fr.acinq.lightning.channel.LocalCommitPublished(commitTx, claimMainDelayedOutputTx, htlcTxs, claimHtlcDelayedTxs, claimAnchorTxs, irrevocablySpent)
 }
 
@@ -132,8 +113,6 @@ internal data class RemoteCommitPublished(
     val claimAnchorTxs: List<Transactions.TransactionWithInputInfo.ClaimAnchorOutputTx> = emptyList(),
     val irrevocablySpent: Map<@Serializable(with = OutPointKSerializer::class) OutPoint, @Serializable(with = TransactionKSerializer::class) Transaction> = emptyMap()
 ) {
-    constructor(from: fr.acinq.lightning.channel.RemoteCommitPublished) : this(from.commitTx, from.claimMainOutputTx, from.claimHtlcTxs, from.claimAnchorTxs, from.irrevocablySpent)
-
     fun export() = fr.acinq.lightning.channel.RemoteCommitPublished(commitTx, claimMainOutputTx, claimHtlcTxs, claimAnchorTxs, irrevocablySpent)
 }
 
@@ -147,16 +126,6 @@ internal data class RevokedCommitPublished(
     val claimHtlcDelayedPenaltyTxs: List<Transactions.TransactionWithInputInfo.ClaimHtlcDelayedOutputPenaltyTx> = emptyList(),
     val irrevocablySpent: Map<@Serializable(with = OutPointKSerializer::class) OutPoint, @Serializable(with = TransactionKSerializer::class) Transaction> = emptyMap()
 ) {
-    constructor(from: fr.acinq.lightning.channel.RevokedCommitPublished) : this(
-        from.commitTx,
-        from.remotePerCommitmentSecret,
-        from.claimMainOutputTx,
-        from.mainPenaltyTx,
-        from.htlcPenaltyTxs,
-        from.claimHtlcDelayedPenaltyTxs,
-        from.irrevocablySpent
-    )
-
     fun export() = fr.acinq.lightning.channel.RevokedCommitPublished(commitTx, remotePerCommitmentSecret, claimMainOutputTx, mainPenaltyTx, htlcPenaltyTxs, claimHtlcDelayedPenaltyTxs, irrevocablySpent)
 }
 
@@ -179,20 +148,6 @@ internal data class LocalParams constructor(
     @Serializable(with = ByteVectorKSerializer::class) val defaultFinalScriptPubKey: ByteVector,
     val features: Features
 ) {
-    constructor(from: fr.acinq.lightning.channel.LocalParams) : this(
-        from.nodeId,
-        from.channelKeys.fundingKeyPath,
-        from.dustLimit,
-        from.maxHtlcValueInFlightMsat,
-        from.channelReserve,
-        from.htlcMinimum,
-        from.toSelfDelay,
-        from.maxAcceptedHtlcs,
-        from.isInitiator,
-        from.defaultFinalScriptPubKey,
-        from.features
-    )
-
     fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.LocalParams(
         nodeId,
         nodeParams.keyManager.channelKeys(fundingKeyPath),
@@ -224,22 +179,6 @@ internal data class RemoteParams(
     @Serializable(with = PublicKeyKSerializer::class) val htlcBasepoint: PublicKey,
     val features: Features
 ) {
-    constructor(from: fr.acinq.lightning.channel.RemoteParams) : this(
-        from.nodeId,
-        from.dustLimit,
-        from.maxHtlcValueInFlightMsat,
-        from.channelReserve,
-        from.htlcMinimum,
-        from.toSelfDelay,
-        from.maxAcceptedHtlcs,
-        from.fundingPubKey,
-        from.revocationBasepoint,
-        from.paymentBasepoint,
-        from.delayedPaymentBasepoint,
-        from.htlcBasepoint,
-        from.features
-    )
-
     fun export() = fr.acinq.lightning.channel.RemoteParams(
         nodeId,
         dustLimit,
@@ -285,8 +224,6 @@ internal data class ChannelVersion(@Serializable(with = ByteVectorKSerializer::c
 
 @Serializable
 internal data class ClosingTxProposed(val unsignedTx: Transactions.TransactionWithInputInfo.ClosingTx, val localClosingSigned: ClosingSigned) {
-    constructor(from: fr.acinq.lightning.channel.ClosingTxProposed) : this(from.unsignedTx, from.localClosingSigned)
-
     fun export() = fr.acinq.lightning.channel.ClosingTxProposed(unsignedTx, localClosingSigned)
 }
 
@@ -309,25 +246,6 @@ internal data class Commitments(
     @Serializable(with = ByteVector32KSerializer::class) val channelId: ByteVector32,
     val remoteChannelData: EncryptedChannelData = EncryptedChannelData.empty
 ) {
-    constructor(from: fr.acinq.lightning.channel.Commitments) : this(
-        ChannelVersion.standard,
-        LocalParams(from.localParams),
-        RemoteParams(from.remoteParams),
-        from.channelFlags,
-        LocalCommit(from.localCommit),
-        RemoteCommit(from.remoteCommit),
-        LocalChanges(from.localChanges),
-        RemoteChanges(from.remoteChanges),
-        from.localNextHtlcId,
-        from.remoteNextHtlcId,
-        from.payments,
-        from.remoteNextCommitInfo.transform({ x -> WaitingForRevocation(x) }, { y -> y }),
-        from.commitInput,
-        from.remotePerCommitmentSecrets,
-        from.channelId,
-        from.remoteChannelData
-    )
-
     fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.Commitments(
         ChannelVersion.channelConfig,
         ChannelVersion.channelFeatures,
@@ -351,15 +269,11 @@ internal data class Commitments(
 
 @Serializable
 internal data class OnChainFeerates(val mutualCloseFeerate: FeeratePerKw, val claimMainFeerate: FeeratePerKw, val fastFeerate: FeeratePerKw) {
-    constructor(from: fr.acinq.lightning.blockchain.fee.OnChainFeerates) : this(from.mutualCloseFeerate, from.claimMainFeerate, from.fastFeerate)
-
     fun export() = fr.acinq.lightning.blockchain.fee.OnChainFeerates(mutualCloseFeerate, claimMainFeerate, fastFeerate)
 }
 
 @Serializable
 internal data class StaticParams(@Serializable(with = ByteVector32KSerializer::class) val chainHash: ByteVector32, @Serializable(with = PublicKeyKSerializer::class) val remoteNodeId: PublicKey) {
-    constructor(from: fr.acinq.lightning.channel.StaticParams) : this(from.nodeParams.chainHash, from.remoteNodeId)
-
     fun export(nodeParams: NodeParams): fr.acinq.lightning.channel.StaticParams {
         require(chainHash == nodeParams.chainHash) { "restoring data from a different chain" }
         return fr.acinq.lightning.channel.StaticParams(nodeParams, this.remoteNodeId)
@@ -371,23 +285,6 @@ internal sealed class ChannelState {
     abstract val staticParams: StaticParams
     abstract val currentTip: Pair<Int, BlockHeader>
     abstract val currentOnChainFeerates: OnChainFeerates
-
-    companion object {
-        fun import(from: fr.acinq.lightning.channel.ChannelState): ChannelState = when (from) {
-            is fr.acinq.lightning.channel.WaitForInit -> WaitForInit(from)
-            is fr.acinq.lightning.channel.Aborted -> Aborted(from)
-            is fr.acinq.lightning.channel.WaitForOpenChannel -> WaitForOpenChannel(from)
-            is fr.acinq.lightning.channel.WaitForAcceptChannel -> WaitForAcceptChannel(from)
-            is fr.acinq.lightning.channel.WaitForFundingLocked -> WaitForFundingLocked(from)
-            is fr.acinq.lightning.channel.WaitForFundingConfirmed -> WaitForFundingConfirmed(from)
-            is fr.acinq.lightning.channel.WaitForRemotePublishFutureCommitment -> WaitForRemotePublishFutureCommitment(from)
-            is fr.acinq.lightning.channel.WaitForFundingCreated -> WaitForFundingCreated(from)
-            is fr.acinq.lightning.channel.WaitForFundingSigned -> WaitForFundingSigned(from)
-            is fr.acinq.lightning.channel.Offline -> Offline(from)
-            is fr.acinq.lightning.channel.Syncing -> Syncing(from)
-            is fr.acinq.lightning.channel.ChannelStateWithCommitments -> ChannelStateWithCommitments.import(from)
-        }
-    }
 }
 
 @Serializable
@@ -395,20 +292,6 @@ internal sealed class ChannelStateWithCommitments : ChannelState() {
     abstract val commitments: Commitments
     val channelId: ByteVector32 get() = commitments.channelId
     abstract fun export(nodeParams: NodeParams): fr.acinq.lightning.channel.ChannelStateWithCommitments
-
-    companion object {
-        fun import(from: fr.acinq.lightning.channel.ChannelStateWithCommitments): ChannelStateWithCommitments = when (from) {
-            is fr.acinq.lightning.channel.WaitForRemotePublishFutureCommitment -> WaitForRemotePublishFutureCommitment(from)
-            is fr.acinq.lightning.channel.WaitForFundingConfirmed -> WaitForFundingConfirmed(from)
-            is fr.acinq.lightning.channel.WaitForFundingLocked -> WaitForFundingLocked(from)
-            is fr.acinq.lightning.channel.Normal -> Normal(from)
-            is fr.acinq.lightning.channel.ShuttingDown -> ShuttingDown(from)
-            is fr.acinq.lightning.channel.Negotiating -> Negotiating(from)
-            is fr.acinq.lightning.channel.Closing -> Closing(from)
-            is fr.acinq.lightning.channel.Closed -> Closed(from)
-            is fr.acinq.lightning.channel.ErrorInformationLeak -> ErrorInformationLeak(from)
-        }
-    }
 }
 
 @Serializable
@@ -416,26 +299,20 @@ internal data class Aborted(
     override val staticParams: StaticParams,
     override val currentTip: Pair<Int, @Serializable(with = BlockHeaderKSerializer::class) BlockHeader>,
     override val currentOnChainFeerates: OnChainFeerates
-) : ChannelState() {
-    constructor(from: fr.acinq.lightning.channel.Aborted) : this(StaticParams(from.staticParams), from.currentTip, OnChainFeerates(from.currentOnChainFeerates))
-}
+) : ChannelState()
 
 @Serializable
 internal data class WaitForInit(
     override val staticParams: StaticParams,
     override val currentTip: Pair<Int, @Serializable(with = BlockHeaderKSerializer::class) BlockHeader>,
     override val currentOnChainFeerates: OnChainFeerates
-) : ChannelState() {
-    constructor(from: fr.acinq.lightning.channel.WaitForInit) : this(StaticParams(from.staticParams), from.currentTip, OnChainFeerates(from.currentOnChainFeerates))
-}
+) : ChannelState()
 
 @Serializable
 internal data class Offline(val state: ChannelStateWithCommitments) : ChannelState() {
     override val staticParams: StaticParams get() = state.staticParams
     override val currentTip: Pair<Int, BlockHeader> get() = state.currentTip
     override val currentOnChainFeerates: OnChainFeerates get() = state.currentOnChainFeerates
-
-    constructor(from: fr.acinq.lightning.channel.Offline) : this(ChannelStateWithCommitments.import(from.state))
 }
 
 @Serializable
@@ -443,8 +320,6 @@ internal data class Syncing(val state: ChannelStateWithCommitments, val waitForT
     override val staticParams: StaticParams get() = state.staticParams
     override val currentTip: Pair<Int, BlockHeader> get() = state.currentTip
     override val currentOnChainFeerates: OnChainFeerates get() = state.currentOnChainFeerates
-
-    constructor(from: fr.acinq.lightning.channel.Syncing) : this(ChannelStateWithCommitments.import(from.state), from.waitForTheirReestablishMessage)
 }
 
 @Serializable
@@ -455,16 +330,7 @@ internal data class WaitForOpenChannel(
     @Serializable(with = ByteVector32KSerializer::class) val temporaryChannelId: ByteVector32,
     val localParams: LocalParams,
     val remoteInit: Init
-) : ChannelState() {
-    constructor(from: fr.acinq.lightning.channel.WaitForOpenChannel) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        from.temporaryChannelId,
-        LocalParams(from.localParams),
-        from.remoteInit
-    )
-}
+) : ChannelState()
 
 @Serializable
 internal data class WaitForRemotePublishFutureCommitment(
@@ -474,13 +340,6 @@ internal data class WaitForRemotePublishFutureCommitment(
     override val commitments: Commitments,
     val remoteChannelReestablish: ChannelReestablish
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.WaitForRemotePublishFutureCommitment) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.remoteChannelReestablish
-    )
 
     override fun export(nodeParams: NodeParams) =
         fr.acinq.lightning.channel.WaitForRemotePublishFutureCommitment(staticParams.export(nodeParams), currentTip, currentOnChainFeerates.export(), commitments.export(nodeParams), remoteChannelReestablish)
@@ -501,37 +360,17 @@ internal data class WaitForFundingCreated(
     val channelFlags: Byte,
     val channelVersion: ChannelVersion,
     val lastSent: AcceptChannel
-) : ChannelState() {
-    constructor(from: fr.acinq.lightning.channel.WaitForFundingCreated) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        from.temporaryChannelId,
-        LocalParams(from.localParams),
-        RemoteParams(from.remoteParams),
-        from.fundingAmount,
-        from.pushAmount,
-        from.commitTxFeerate,
-        from.remoteFirstPerCommitmentPoint,
-        from.channelFlags,
-        ChannelVersion.standard,
-        from.lastSent
-    )
-}
+) : ChannelState()
 
 @Serializable
 internal data class FundingInput(
     @Serializable(with = TransactionKSerializer::class) val previousTx: Transaction,
     val outputIndex: Int,
     @Serializable(with = PrivateKeyKSerializer::class) val privateKey: PrivateKey
-) {
-    constructor(from: fr.acinq.lightning.channel.FundingInput) : this(from.previousTx, from.outputIndex, from.privateKey)
-}
+)
 
 @Serializable
-internal data class FundingInputs(@Serializable(with = SatoshiKSerializer::class) val fundingAmount: Satoshi, val inputs: List<FundingInput>) {
-    constructor(from: fr.acinq.lightning.channel.FundingInputs) : this(from.fundingAmount, from.inputs.map { FundingInput(it) })
-}
+internal data class FundingInputs(@Serializable(with = SatoshiKSerializer::class) val fundingAmount: Satoshi, val inputs: List<FundingInput>)
 
 @Serializable
 internal data class InitInitiator(
@@ -543,18 +382,7 @@ internal data class InitInitiator(
     val remoteInit: Init,
     val channelFlags: Byte,
     val channelVersion: ChannelVersion
-) {
-    constructor(from: fr.acinq.lightning.channel.ChannelEvent.InitInitiator) : this(
-        FundingInputs(from.fundingInputs),
-        from.pushAmount,
-        from.commitTxFeerate,
-        from.fundingTxFeerate,
-        LocalParams(from.localParams),
-        from.remoteInit,
-        from.channelFlags,
-        ChannelVersion.standard,
-    )
-}
+)
 
 @Serializable
 internal data class WaitForAcceptChannel(
@@ -563,15 +391,7 @@ internal data class WaitForAcceptChannel(
     override val currentOnChainFeerates: OnChainFeerates,
     val init: InitInitiator,
     val lastSent: OpenChannel
-) : ChannelState() {
-    constructor(from: fr.acinq.lightning.channel.WaitForAcceptChannel) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        InitInitiator(from.init),
-        from.lastSent
-    )
-}
+) : ChannelState()
 
 @Serializable
 internal data class WaitForFundingSigned(
@@ -589,24 +409,7 @@ internal data class WaitForFundingSigned(
     val channelFlags: Byte,
     val channelVersion: ChannelVersion,
     val lastSent: FundingCreated
-) : ChannelState() {
-    constructor(from: fr.acinq.lightning.channel.WaitForFundingSigned) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        from.channelId,
-        LocalParams(from.localParams),
-        RemoteParams(from.remoteParams),
-        from.fundingTx,
-        from.fundingTxFee,
-        CommitmentSpec(from.localSpec),
-        from.localCommitTx,
-        RemoteCommit(from.remoteCommit),
-        from.channelFlags,
-        ChannelVersion.standard,
-        from.lastSent
-    )
-}
+) : ChannelState()
 
 @Serializable
 internal data class WaitForFundingConfirmed(
@@ -619,17 +422,6 @@ internal data class WaitForFundingConfirmed(
     val deferred: FundingLocked?,
     @Serializable(with = EitherSerializer::class) val lastSent: Either<FundingCreated, FundingSigned>
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.WaitForFundingConfirmed) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.fundingTx,
-        from.waitingSinceBlock,
-        from.deferred,
-        from.lastSent
-    )
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.WaitForFundingConfirmed(
         staticParams.export(nodeParams),
         currentTip,
@@ -651,15 +443,6 @@ internal data class WaitForFundingLocked(
     val shortChannelId: ShortChannelId,
     val lastSent: FundingLocked
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.WaitForFundingLocked) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.shortChannelId,
-        from.lastSent
-    )
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.WaitForFundingLocked(
         staticParams.export(nodeParams),
         currentTip,
@@ -684,20 +467,6 @@ internal data class Normal(
     val localShutdown: Shutdown?,
     val remoteShutdown: Shutdown?
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.Normal) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.shortChannelId,
-        from.buried,
-        from.channelAnnouncement,
-        from.channelUpdate,
-        from.remoteChannelUpdate,
-        from.localShutdown,
-        from.remoteShutdown
-    )
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.Normal(
         staticParams.export(nodeParams),
         currentTip,
@@ -723,15 +492,6 @@ internal data class ShuttingDown(
     val localShutdown: Shutdown,
     val remoteShutdown: Shutdown
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.ShuttingDown) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.localShutdown,
-        from.remoteShutdown
-    )
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.ShuttingDown(
         staticParams.export(nodeParams),
         currentTip,
@@ -758,17 +518,6 @@ internal data class Negotiating(
         require(closingTxProposed.isNotEmpty()) { "there must always be a list for the current negotiation" }
         require(!commitments.localParams.isFunder || !closingTxProposed.any { it.isEmpty() }) { "initiator must have at least one closing signature for every negotiation attempt because it initiates the closing" }
     }
-
-    constructor(from: fr.acinq.lightning.channel.Negotiating) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.localShutdown,
-        from.remoteShutdown,
-        from.closingTxProposed.map { x -> x.map { ClosingTxProposed(it) } },
-        from.bestUnpublishedClosingTx
-    )
 
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.Negotiating(
         staticParams.export(nodeParams),
@@ -799,22 +548,6 @@ internal data class Closing(
     val futureRemoteCommitPublished: RemoteCommitPublished? = null,
     val revokedCommitPublished: List<RevokedCommitPublished> = emptyList()
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.Closing) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments),
-        from.fundingTx,
-        from.waitingSinceBlock,
-        from.mutualCloseProposed,
-        from.mutualClosePublished,
-        from.localCommitPublished?.let { LocalCommitPublished(it) },
-        from.remoteCommitPublished?.let { RemoteCommitPublished(it) },
-        from.nextRemoteCommitPublished?.let { RemoteCommitPublished(it) },
-        from.futureRemoteCommitPublished?.let { RemoteCommitPublished(it) },
-        from.revokedCommitPublished.map { RevokedCommitPublished(it) }
-    )
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.Closing(
         staticParams.export(nodeParams),
         currentTip,
@@ -839,8 +572,6 @@ internal data class Closed(val state: Closing) : ChannelStateWithCommitments() {
     override val currentTip: Pair<Int, BlockHeader> get() = state.currentTip
     override val currentOnChainFeerates: OnChainFeerates get() = state.currentOnChainFeerates
 
-    constructor(from: fr.acinq.lightning.channel.Closed) : this(Closing(from.state))
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.Closed(state.export(nodeParams))
 }
 
@@ -851,13 +582,6 @@ internal data class ErrorInformationLeak(
     override val currentOnChainFeerates: OnChainFeerates,
     override val commitments: Commitments
 ) : ChannelStateWithCommitments() {
-    constructor(from: fr.acinq.lightning.channel.ErrorInformationLeak) : this(
-        StaticParams(from.staticParams),
-        from.currentTip,
-        OnChainFeerates(from.currentOnChainFeerates),
-        Commitments(from.commitments)
-    )
-
     override fun export(nodeParams: NodeParams) = fr.acinq.lightning.channel.ErrorInformationLeak(
         staticParams.export(nodeParams),
         currentTip,

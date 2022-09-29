@@ -435,8 +435,6 @@ object TestsHelper {
 
     // we check that serialization works by checking that deserialize(serialize(state)) == state
     private fun checkSerialization(state: ChannelStateWithCommitments, saveFiles: Boolean = false) {
-        val serializedv1 = fr.acinq.lightning.serialization.v1.Serialization.serialize(state)
-        val serializedv2 = fr.acinq.lightning.serialization.v2.Serialization.serialize(state)
         val serializedv3 = fr.acinq.lightning.serialization.v3.Serialization.serialize(state)
 
         fun save(blob: ByteArray, suffix: String) {
@@ -446,34 +444,15 @@ object TestsHelper {
         }
 
         if (saveFiles) {
-            save(serializedv1, "v1")
-            save(serializedv2, "v2")
             save(serializedv3, "v3")
         }
 
-        // Before v3, we had a single set of hard-coded channel features, so they will not match if the test added new channel features that weren't supported then.
-        fun maskChannelFeatures(state: ChannelStateWithCommitments): ChannelStateWithCommitments = when (state) {
-            is WaitForRemotePublishFutureCommitment -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is WaitForFundingConfirmed -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is WaitForFundingLocked -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is Normal -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is ShuttingDown -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is Negotiating -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is Closing -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-            is Closed -> state.copy(state = state.state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features))))
-            is ErrorInformationLeak -> state.copy(commitments = state.commitments.copy(channelFeatures = ChannelFeatures(ChannelType.SupportedChannelType.AnchorOutputs.features)))
-        }
-
-        val deserializedv1 = Serialization.deserialize(serializedv1, state.staticParams.nodeParams)
-        assertEquals(maskChannelFeatures(deserializedv1), maskChannelFeatures(state), "serialization error (v1)")
-        val deserializedv2 = Serialization.deserialize(serializedv2, state.staticParams.nodeParams)
-        assertEquals(maskChannelFeatures(deserializedv2), maskChannelFeatures(state), "serialization error (v2)")
         val deserializedv3 = Serialization.deserialize(serializedv3, state.staticParams.nodeParams)
         assertEquals(deserializedv3, state, "serialization error (v3)")
     }
 
     private fun checkSerialization(actions: List<ChannelAction>) {
-        // we check that serialization works everytime we're suppose to persist channel data
+        // we check that serialization works everytime we're supposed to persist channel data
         actions.filterIsInstance<ChannelAction.Storage.StoreState>().forEach { checkSerialization(it.data) }
     }
 
