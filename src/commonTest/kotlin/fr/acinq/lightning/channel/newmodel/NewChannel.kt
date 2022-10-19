@@ -33,11 +33,21 @@ data class Params(val alias: String)
 
 data class Context(val params: Params)
 
-fun test() {
-    val context = Context(Params(alias = "my node"))
-    val state = State.State1("foobar")
+data class Channel<out S: State>(
+    val context: Context,
+    val state: S
+) {
+    fun process(cmd: Command): Pair<State, List<Action>> =
+        state.run { context.process(cmd) }
+}
 
-    val (state1, actions) = state.run { context.process(Command.Command1) }
+fun test() {
+    val channel = Channel(
+        context = Context(Params(alias = "my node")),
+        state = State.State1("foobar")
+    )
+
+    val (state1, actions) = channel.process(Command.Command1)
 }
 
 
