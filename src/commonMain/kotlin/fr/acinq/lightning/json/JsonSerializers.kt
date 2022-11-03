@@ -81,9 +81,11 @@ package fr.acinq.lightning.json
 import fr.acinq.bitcoin.*
 import fr.acinq.lightning.*
 import fr.acinq.lightning.blockchain.fee.FeeratePerKw
-import fr.acinq.lightning.blockchain.fee.OnChainFeerates
 import fr.acinq.lightning.channel.*
 import fr.acinq.lightning.crypto.ShaChain
+import fr.acinq.lightning.json.JsonSerializers.LongSerializer
+import fr.acinq.lightning.json.JsonSerializers.StringSerializer
+import fr.acinq.lightning.json.JsonSerializers.SurrogateSerializer
 import fr.acinq.lightning.transactions.*
 import fr.acinq.lightning.utils.Either
 import fr.acinq.lightning.utils.UUID
@@ -95,6 +97,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
@@ -113,20 +116,12 @@ import kotlinx.serialization.modules.polymorphic
  */
 object JsonSerializers {
 
-    fun toJsonString(state: ChannelState): String {
-        return when(state) {
-            is PersistedChannelState -> json.encodeToString(state)
-            else -> json.encodeToString(ChannelStateSurrogate(state::class.qualifiedName!!))
-        }
-    }
-
-    /** Only use this if you know what you are doing, otherwise use [toJsonString] */
+    @OptIn(ExperimentalSerializationApi::class)
     val json = Json {
         prettyPrint = true
         serializersModule = SerializersModule {
             // we need to explicitly define a [PolymorphicSerializer] for sealed classes, but not for interfaces
-            contextual(PolymorphicSerializer(PersistedChannelState::class))
-            polymorphic(PersistedChannelState::class) {
+            fun PolymorphicModuleBuilder<PersistedChannelState>.registerSubclasses() {
                 subclass(LegacyWaitForFundingConfirmed::class, LegacyWaitForFundingConfirmedSerializer)
                 subclass(LegacyWaitForFundingLocked::class, LegacyWaitForFundingLockedSerializer)
                 subclass(WaitForChannelReady::class, WaitForChannelReadySerializer)
@@ -138,6 +133,17 @@ object JsonSerializers {
                 subclass(WaitForRemotePublishFutureCommitment::class, WaitForRemotePublishFutureCommitmentSerializer)
                 subclass(Closed::class, ClosedSerializer)
             }
+            contextual(PolymorphicSerializer(ChannelState::class))
+            polymorphicDefaultSerializer(ChannelState::class) { ChannelStateSerializer }
+            polymorphic(ChannelState::class) { registerSubclasses() }
+
+            contextual(PolymorphicSerializer(ChannelStateWithCommitments::class))
+            polymorphicDefaultSerializer(ChannelStateWithCommitments::class) { ChannelStateSerializer }
+            polymorphic(ChannelStateWithCommitments::class) { registerSubclasses() }
+
+            contextual(PolymorphicSerializer(PersistedChannelState::class))
+            polymorphic(PersistedChannelState::class) { registerSubclasses() }
+
             polymorphic(UpdateMessage::class) {
                 subclass(UpdateAddHtlc::class, UpdateAddHtlcSerializer)
                 subclass(UpdateFailHtlc::class, UpdateFailHtlcSerializer)
@@ -161,8 +167,9 @@ object JsonSerializers {
             contextual(ByteVector32Serializer)
         }
     }
-    @Serializable
-    data class ChannelStateSurrogate(val type: String)
+
+    @Serializer(forClass = ChannelState::class)
+    object ChannelStateSerializer
 
     @Serializer(forClass = LegacyWaitForFundingConfirmed::class)
     object LegacyWaitForFundingConfirmedSerializer
@@ -398,6 +405,7 @@ object JsonSerializers {
         override val descriptor: SerialDescriptor = delegateSerializer.descriptor
         override fun serialize(encoder: Encoder, value: TlvStream<T>) =
             delegateSerializer.serialize(encoder, TlvStreamSurrogate(value.records, value.unknown))
+
         override fun deserialize(decoder: Decoder): TlvStream<T> = TODO("json deserialization is not supported")
     }
 
