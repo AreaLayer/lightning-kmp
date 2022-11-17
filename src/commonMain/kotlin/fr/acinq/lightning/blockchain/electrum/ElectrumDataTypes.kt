@@ -145,7 +145,6 @@ data class GetMerkleResponse(val txid: ByteVector32, val merkle: List<ByteVector
             }
         }
 
-        @Suppress("UNCHECKED_CAST")
         loop(pos, listOf(txid.reversed()) + merkle.map { it.reversed() })
     }
 }
@@ -172,8 +171,6 @@ data class HeaderSubscriptionResponse(val blockHeight: Int, val header: BlockHea
 /**
  * Other Electrum responses
  */
-data class TransactionHistory(val history: List<TransactionHistoryItem>) : ElectrumResponse
-data class AddressStatus(val address: String, val status: String?) : ElectrumResponse
 data class ServerError(val request: ElectrumRequest, val error: JsonRPCError) : ElectrumResponse
 
 /**
@@ -316,7 +313,7 @@ internal fun parseJsonResponse(request: ElectrumRequest, rpcResponse: JsonRPCRes
             // if we got here, it means that the server's response does not contain an error and message should be our
             // transaction id. However, it seems that at least on testnet some servers still use an older version of the
             // Electrum protocol and return an error message in the result field
-            val result = runTrying<ByteVector32> {
+            val result = runTrying {
                 ByteVector32.fromValidHex(message)
             }
             when (result) {

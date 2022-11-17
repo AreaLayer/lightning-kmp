@@ -17,6 +17,7 @@ import fr.acinq.lightning.io.BytesReceived
 import fr.acinq.lightning.io.Peer
 import fr.acinq.lightning.io.TcpSocket
 import fr.acinq.lightning.utils.Connection
+import fr.acinq.lightning.utils.ServerAddress
 import fr.acinq.lightning.utils.sat
 import fr.acinq.lightning.utils.toByteVector
 import fr.acinq.lightning.wire.ChannelReady
@@ -166,7 +167,7 @@ fun buildPeer(
     currentTip: Pair<Int, BlockHeader> = 0 to Block.RegtestGenesisBlock.header
 ): Peer {
     val electrum = ElectrumClient(TcpSocket.Builder(), scope, LoggerFactory.default)
-    val watcher = ElectrumWatcher(electrum.Caller(), scope, LoggerFactory.default)
+    val watcher = ElectrumWatcher(electrum, scope, LoggerFactory.default)
     val peer = Peer(nodeParams, walletParams, watcher, databases, TcpSocket.Builder(), scope)
     peer.currentTipFlow.value = currentTip
     peer.onChainFeeratesFlow.value = OnChainFeerates(

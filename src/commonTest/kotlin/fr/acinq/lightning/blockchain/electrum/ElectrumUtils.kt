@@ -1,18 +1,17 @@
 package fr.acinq.lightning.blockchain.electrum
 
 import fr.acinq.lightning.io.TcpSocket
-import fr.acinq.lightning.utils.Connection
 import fr.acinq.lightning.utils.ServerAddress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import org.kodein.log.LoggerFactory
 
 suspend fun connectToElectrumServer(scope: CoroutineScope, addr: ServerAddress): ElectrumClient {
-    val client = ElectrumClient(TcpSocket.Builder(), scope, LoggerFactory.default).apply { connect(addr) }
-
-    client.connectionState.first { it is Connection.CLOSED }
-    client.connectionState.first { it is Connection.ESTABLISHING }
-    client.connectionState.first { it is Connection.ESTABLISHED }
+    val client = ElectrumClient(TcpSocket.Builder(), scope, LoggerFactory.default)
+    client.start(addr)
+    client.connectionStatus.first { it is ElectrumConnectionStatus.Closed }
+    client.connectionStatus.first { it is ElectrumConnectionStatus.Connecting }
+    client.connectionStatus.first { it is ElectrumConnectionStatus.Connected }
 
     return client
 }
